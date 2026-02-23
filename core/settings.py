@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'ninja_extra',
     'ninja_jwt.token_blacklist',
     'ninja_jwt',
+    'spots',
 ]
 
 MIDDLEWARE = [

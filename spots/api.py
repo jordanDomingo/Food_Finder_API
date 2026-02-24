@@ -2,8 +2,8 @@ from ninja import Router
 from ninja_jwt.authentication import JWTAuth
 from django.shortcuts import get_object_or_404
 from typing import List
-from .models import Spot, Category
-from .schemas import SpotIn, SpotOut, CategoryOut, CategoryIn
+from .models import Spot, Category, MenuItem, OpeningHour
+from .schemas import SpotIn, SpotOut, CategoryOut, CategoryIn, MenuItemIn, MenuItemOut, OpeningHourIn, OpeningHourOut
 from uuid import UUID
 
 router = Router(tags=["Spots"])
@@ -58,3 +58,39 @@ def delete_spot(request, spot_id: UUID):
     spot = get_object_or_404(Spot, id=spot_id, seller=request.user)
     spot.delete()
     return {"success": True}
+
+
+
+
+
+
+@router.post("/{spot_id}/menu", response=MenuItemOut, auth=JWTAuth(), tags=["Menu"])
+def add_menu_item(request, spot_id: UUID, data: MenuItemIn):
+    # On vérifie que le stand appartient bien au vendeur connecté
+    spot = get_object_or_404(Spot, id=spot_id, seller=request.user)
+    item = MenuItem.objects.create(spot=spot, **data.dict())
+    return item
+
+@router.get("/{spot_id}/menu", response=List[MenuItemOut], tags=["Menu"])
+def list_menu_items(request, spot_id: UUID):
+    # Route publique pour que les clients voient la carte du stand
+    return MenuItem.objects.filter(spot_id=spot_id, is_available=True)
+
+
+
+
+
+
+@router.post("/{spot_id}/hours", response=OpeningHourOut, auth=JWTAuth(), tags=["Horaires"])
+def add_opening_hour(request, spot_id: UUID, data: OpeningHourIn):
+    spot = get_object_or_404(Spot, id=spot_id, seller=request.user)
+    # update_or_create permet de modifier si le jour existe déjà
+    hour, created = OpeningHour.objects.update_or_create(
+        spot=spot, day=data.day,
+        defaults={'opening_time': data.opening_time, 'closing_time': data.closing_time}
+    )
+    return hour
+
+@router.get("/{spot_id}/hours", response=List[OpeningHourOut], tags=["Horaires"])
+def list_spot_hours(request, spot_id: UUID):
+    return OpeningHour.objects.filter(spot_id=spot_id).order_by('day')

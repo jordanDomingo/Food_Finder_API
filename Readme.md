@@ -15,3 +15,5 @@ PATCH  /api/auth/me/update
 POST   /api/auth/become-seller
 POST   /api/auth/logout
 DELETE /api/auth/me/delete
+lmpdctngiggjuihuuibibhkjnk
+hbjbn
